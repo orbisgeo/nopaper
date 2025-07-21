@@ -1,281 +1,146 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Painel de Protocolos</title>
-    <style>
-        /* General Styles */
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-            color: #333;
-        }
+  <meta charset="UTF-8">
+  <title>Mapa - Lotes Gurinhem</title>
+  <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css">
+  <style>
+    html, body, #map {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100%;
+      font-family: 'Segoe UI', sans-serif;
+    }
 
-        /* Formulario Section */
-        .formulario {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
-        }
+    .ol-popup {
+      position: absolute;
+      background-color: white;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      bottom: 12px;
+      left: -50px;
+      min-width: 200px;
+    }
 
-        /* Input, Select, Textarea Styles */
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            box-sizing: border-box; /* Include padding and border in the element's total width and height */
-        }
+    .ol-popup:after, .ol-popup:before {
+      top: 100%;
+      border: solid transparent;
+      content: " ";
+      height: 0;
+      width: 0;
+      position: absolute;
+      pointer-events: none;
+    }
 
-        /* Button Styles */
-        button {
-            padding: 10px 16px;
-            border: none;
-            background: #2563eb;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 8px; /* Slightly increased margin for better spacing */
-            transition: background 0.3s ease; /* Smooth transition for hover effect */
-        }
-        button:hover {
-            background: #1e40af;
-        }
-        button:last-child {
-            margin-right: 0; /* No margin on the last button */
-        }
+    .ol-popup:after {
+      border-top-color: white;
+      border-width: 10px;
+      left: 48px;
+      margin-left: -10px;
+    }
 
-        /* Protocol List Items */
-        #listaProtocolos > div.protocol-item { /* Specific selector for protocol items */
-            background: #fff;
-            padding: 0; /* Remove padding from the main item to allow inner divs to control it */
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-            border: 1px solid #ddd; /* Default border */
-            overflow: hidden; /* Clear floats/contain child elements */
-        }
-
-        /* Alert and Resolved States */
-        .alerta {
-            border-color: #ffc107; /* Orange for protocols needing action */
-            /* background-color: #fff3cd; Removed from here, handled by summary/details */
-        }
-        .resolved {
-            border-color: #28a745; /* Green for resolved protocols */
-            /* background-color: #d4edda; Removed from here, handled by summary/details */
-        }
-
-        /* Protocol Summary (Clickable Header) */
-        .protocol-summary {
-            padding: 15px;
-            background-color: #f0f0f0; /* Light gray background */
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            transition: background-color 0.3s ease;
-        }
-        .protocol-summary:hover {
-            background-color: #e0e0e0;
-        }
-        .protocol-item.alerta .protocol-summary {
-            background-color: #fff3cd; /* Orange background for alert summary */
-        }
-        .protocol-item.resolved .protocol-summary {
-            background-color: #d4edda; /* Green background for resolved summary */
-        }
-        .toggle-icon {
-            font-size: 1.2em;
-            margin-left: 10px;
-        }
-
-        /* Protocol Details (Initially Hidden) */
-        .protocol-details {
-            padding: 15px;
-            padding-top: 0; /* Adjust top padding */
-            border-top: none;
-        }
-        .protocol-header-details {
-            padding-top: 15px;
-        }
-
-        /* Status Badges */
-        .status-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: bold;
-            margin-left: 10px;
-            vertical-align: middle;
-        }
-        .resolved-badge {
-            background-color: #28a745;
-            color: white;
-        }
-        .alert-badge {
-            background-color: #ffc107;
-            color: #333;
-        }
-
-        /* Protocol Details Styling */
-        .protocol-header-details strong {
-            display: inline-block;
-            width: 140px; /* Adjust as needed for alignment of labels */
-            font-weight: bold;
-        }
-
-        /* Sections for Responses, History, Files */
-        .protocol-responses, .protocol-history, .protocol-files {
-            background-color: #e9ecef;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 4px;
-            border: 1px solid #dee2e6;
-        }
-        .protocol-responses ul, .protocol-history ul, .protocol-files ul {
-            list-style-type: none;
-            padding-left: 0;
-            margin-top: 5px;
-        }
-        .protocol-responses li, .protocol-history li, .protocol-files li {
-            margin-bottom: 5px;
-            line-height: 1.4;
-        }
-        .protocol-files a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        .protocol-files a:hover {
-            text-decoration: underline;
-        }
-
-        /* Action Area within Protocols */
-        .protocol-actions {
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px dashed #ccc;
-        }
-        .protocol-actions textarea {
-            min-height: 60px; /* Make textarea larger by default */
-        }
-
-        /* Encaminhamento Options */
-        .encaminhar-options {
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-            margin-top: 10px;
-            background-color: #f0f8ff; /* Light blue background for encaminhamento */
-            padding: 15px;
-            border-radius: 5px;
-        }
-        .encaminhar-options h4 {
-            margin-top: 0;
-            color: #2563eb;
-        }
-        .full-width-select {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        /* Status Messages for Protocols */
-        .read-only-status, .waiting-action, .resolved-status {
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            text-align: center;
-        }
-        .read-only-status { background-color: #f8d7da; color: #721c24; } /* Reddish for not allowed */
-        .waiting-action { background-color: #d1ecf1; color: #0c5460; } /* Light blue for waiting */
-        .resolved-status { background-color: #d4edda; color: #155724; } /* Green for resolved */
-
-        /* Global Controls Section */
-        .protocol-controls {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #eee;
-            background-color: #fcfcfc;
-            border-radius: 8px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            gap: 20px; /* Space between filter and search */
-        }
-        .protocol-controls label {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            font-weight: normal;
-            margin-bottom: 0; /* Override default label margin */
-        }
-        .protocol-controls input[type="checkbox"] {
-            width: auto;
-            margin-right: 8px;
-            margin-top: 0;
-            margin-bottom: 0;
-        }
-        .protocol-controls input[type="text"] {
-            flex-grow: 1; /* Allows search input to take available space */
-            margin-bottom: 0;
-        }
-    </style>
+    .ol-popup:before {
+      border-top-color: #ccc;
+      border-width: 11px;
+      left: 48px;
+      margin-left: -11px;
+    }
+  </style>
 </head>
 <body>
+  <div id="map"></div>
+  <script>
+    // --- Fonte dos dados
+    const vectorSource = new ol.source.Vector({
+      url: 'http://192.168.1.235:5000/lotes',
+      format: new ol.format.GeoJSON()
+    });
 
-    <div id="infoUsuario" style="margin-bottom: 1.5rem; font-size: 1.1em; color: #555;"></div>
+    // --- Estilo padrão
+    const defaultStyle = new ol.style.Style({
+      stroke: new ol.style.Stroke({ color: '#0077cc', width: 2 }),
+      fill: new ol.style.Fill({ color: 'rgba(0,119,204,0.1)' })
+    });
 
-    <div class="formulario">
-        <h2>Criar Novo Protocolo</h2>
-        <label for="assunto">Assunto:</label>
-        <input type="text" id="assunto" placeholder="Descreva o assunto do protocolo" />
+    const highlightStyle = new ol.style.Style({
+      stroke: new ol.style.Stroke({ color: '#ff8800', width: 3 }),
+      fill: new ol.style.Fill({ color: 'rgba(255,136,0,0.2)' })
+    });
 
-        <label for="destinoSelect">Destino:</label>
-        <select id="destinoSelect">
-            <option value="">Selecione o Destino</option>
-        </select>
+    // --- Camada dos lotes
+    const lotesLayer = new ol.layer.Vector({
+      source: vectorSource,
+      style: defaultStyle
+    });
 
-        <label for="usuarioDestinoSelect">Aos Cuidados de:</label>
-        <select id="usuarioDestinoSelect">
-            <option value="">Selecione o responsável</option>
-        </select>
+    // --- Mapa base
+    const map = new ol.Map({
+      target: 'map',
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.OSM() }),
+        lotesLayer
+      ],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([-35.3196, -7.0597]),
+        zoom: 16
+      })
+    });
 
-        <label for="parecer">Parecer Inicial:</label>
-        <textarea id="parecer" rows="3" placeholder="Insira um parecer inicial ou observações"></textarea>
+    // --- Zoom automático para os dados
+    vectorSource.on('change', function () {
+      if (vectorSource.getState() === 'ready') {
+        const extent = vectorSource.getExtent();
+        map.getView().fit(extent, { duration: 1000, padding: [50, 50, 50, 50] });
+      }
+    });
 
-        <label for="arquivo">Anexar Arquivos (Opcional):</label>
-        <input type="file" id="arquivo" multiple accept="image/*,application/pdf,.doc,.docx" />
+    // --- Popup
+    const container = document.createElement('div');
+    container.className = 'ol-popup';
+    container.style.display = 'none';
+    document.body.appendChild(container);
 
-        <button onclick="criarProtocolo()">Criar Protocolo</button>
-    </div>
+    const overlay = new ol.Overlay({
+      element: container,
+      positioning: 'bottom-center',
+      stopEvent: false,
+      offset: [0, -20]
+    });
+    map.addOverlay(overlay);
 
-    <h2>Lista de Protocolos</h2>
+    // --- Interação de clique
+    map.on('singleclick', function (evt) {
+      const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
+      if (feature) {
+        const props = feature.getProperties();
+        const coord = evt.coordinate;
+        overlay.setPosition(coord);
+        container.innerHTML = `
+          <strong>ID:</strong> ${props.id || '(sem ID)'}<br>
+          <strong>Proprietário:</strong> ${props.nome || '(sem nome)'}
+        `;
+        container.style.display = 'block';
+      } else {
+        container.style.display = 'none';
+      }
+    });
 
-    <div class="protocol-controls">
-        <label for="filterToggle">
-            <input type="checkbox" id="filterToggle"> Mostrar Apenas Meus Protocolos (Criados por mim)
-        </label>
-        <input type="text" id="searchInput" placeholder="Buscar por número, assunto, destino, responsável..." aria-label="Buscar protocolos">
-    </div>
-
-    <div id="listaProtocolos">
-        <p>Carregando protocolos...</p>
-    </div>
-
-    <script type="module" src="./firebase-config.js"></script>
-    <script type="module" src="./painel.js"></script>
-
+    // --- Highlight ao passar o mouse
+    let lastFeature;
+    map.on('pointermove', function (evt) {
+      if (lastFeature) {
+        lastFeature.setStyle(defaultStyle);
+        lastFeature = null;
+      }
+      map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+        lastFeature = feature;
+        feature.setStyle(highlightStyle);
+      });
+    });
+  </script>
 </body>
 </html>
